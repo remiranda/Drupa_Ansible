@@ -1,0 +1,30 @@
+---
+- name: Remove Apache Web server 
+  package: name=apache2 state=absent
+- name: install nginx web server 
+  package: name=nginx state=present
+#Certbot repository in the system if letsencrypt_generate variabel is set to true and the value of the dominian
+- name: add certbot
+  apt_repository: repo='ppa:certbot/certbot' state=present update_cache=yes
+  when:
+    - letsencrypt_generate == true
+    - letsencrypt_domain is defined
+    - letsencrypt_email is defined
+# NGINX web-server is started because to generate the certificates
+- name: start and enable nginx service
+  service: name=nginx state=started enabled=yes
+#generate the SSL certificates using the Certbot client.
+- name: generate letsencrypt certificates
+  shell: certbot certonly --nginx -d {{ letsencrypt_domain }} -n --agree-tos -m {{ letsencrypt_email }}
+  args:
+    creates: /etc/letsencrypt/live/{{ letsencrypt_domain }}
+  when:
+    - letsencrypt_generate == true
+    - letsencrypt_domain is defined
+    - letsencrypt_email is defined
+#Remove the default NGINX configuration file
+- name: remove default nginx configuration
+  file: name=/etc/nginx/sites-enabled/default state=absent
+  notify:
+    - restart nginx
+

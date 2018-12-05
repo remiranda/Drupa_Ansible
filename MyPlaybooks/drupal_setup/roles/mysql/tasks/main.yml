@@ -1,3 +1,23 @@
 ---
-- include: setup.yml
-- include: create_db.yml
+- name: Install MySQL server
+  apt: name=mysql-server state=latest
+
+- name: Install Apache module for MySQL authentication
+  apt: name=libapache2-mod-auth-mysql state=latest
+
+- name: Install MySQL module for PHP
+  apt: name=php5-mysql state=latest
+
+- name: Install Python MySQLdb
+  apt: name=python-mysqldb state=latest
+
+- name: Create the Drupal database
+  mysql_db: db={{ db_name }} state=present
+
+- name: Create the Drupal user
+  mysql_user: >
+    name={{ db_user }}
+    password={{ db_password }}
+    priv={{ db_name }}.*:ALL
+    host=localhost
+
