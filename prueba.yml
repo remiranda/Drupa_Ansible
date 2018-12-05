@@ -1,0 +1,44 @@
+---
+  - name: Testing Openstack + Ansible
+    hosts: localhost
+    tasks:
+      - name: Descargas
+        command: wget cloud-images.ubuntu.com/xenial/current/xenial-server-cloudimg-amd64-disk1.img
+      - name: create a key
+        os_keypair:
+         name: key_stack
+         auth:
+           auth_url: http://172.16.5.187/identity/v3
+           username: admin
+           password: secret
+           project_name: admin
+         state: present
+
+      - name: Upload the local image to glance
+        os_image:
+          auth:
+            auth_url: http://172.16.5.187/identity/v3
+            username: admin
+            password: secret
+            project_name: admin
+          name: image_stack
+          container_format: bare
+          disk_format: qcow2
+          state: present
+          filename: ./xenial-server-cloudimg-amd64-disk1.img
+          is_public: yes
+
+      - name: Upload the local image to glance
+        os_server:
+          auth:
+            auth_url: http://172.16.5.187/identity/v3
+            username: admin
+            password: secret
+            project_name: admin
+          name: inst_stack
+          image: image_stack
+          timeout: 400
+          flavor: 3
+          state: present
+          key_name: key_stack
+          auto_ip: yes
